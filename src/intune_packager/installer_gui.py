@@ -124,8 +124,32 @@ class InstallerGUI:
         log_frame = tk.LabelFrame(content, text="Status", padx=10, pady=10)
         log_frame.pack(fill=tk.X, pady=10)
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, height=8, state=tk.DISABLED)
+        # Log text area (read-only but selectable)
+        self.log_text = scrolledtext.ScrolledText(log_frame, height=8, wrap=tk.WORD)
         self.log_text.pack(fill=tk.X)
+        
+        # Make read-only but allow selection with Ctrl+C
+        self.log_text.bind("<Key>", lambda e: "break" if e.keysym not in ('c', 'C') or not (e.state & 0x4) else None)
+        
+        # Copy logs button
+        log_button_frame = tk.Frame(log_frame)
+        log_button_frame.pack(fill=tk.X, pady=(5, 0))
+        
+        tk.Button(
+            log_button_frame,
+            text="Copy Logs to Clipboard",
+            command=self.copy_logs,
+            padx=10,
+            pady=5
+        ).pack(side=tk.LEFT)
+        
+        tk.Button(
+            log_button_frame,
+            text="Clear Logs",
+            command=self.clear_logs,
+            padx=10,
+            pady=5
+        ).pack(side=tk.LEFT, padx=5)
         
         # Buttons
         button_frame = tk.Frame(content)
@@ -161,11 +185,23 @@ class InstallerGUI:
     
     def log(self, message):
         """Add message to log."""
-        self.log_text.config(state=tk.NORMAL)
         self.log_text.insert(tk.END, message + "\n")
         self.log_text.see(tk.END)
-        self.log_text.config(state=tk.DISABLED)
         self.root.update()
+    
+    def copy_logs(self):
+        """Copy all logs to clipboard."""
+        try:
+            log_content = self.log_text.get(1.0, tk.END)
+            self.root.clipboard_clear()
+            self.root.clipboard_append(log_content)
+            messagebox.showinfo("Success", "Logs copied to clipboard!")
+        except Exception as e:
+            messagebox.showerror("Error", f"Failed to copy logs:\n{str(e)}")
+    
+    def clear_logs(self):
+        """Clear all logs from the display."""
+        self.log_text.delete(1.0, tk.END)
     
     def browse_config(self):
         """Browse for config file."""
