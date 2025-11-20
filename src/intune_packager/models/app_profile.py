@@ -17,6 +17,8 @@ class Installer:
     wait_for_completion: bool = True
     timeout: int = 600
     depends_on: List[str] = field(default_factory=list)
+    optional: bool = False  # Can user disable this installer?
+    enabled: bool = True  # Is this installer enabled by default?
     
     def to_dict(self) -> Dict[str, Any]:
         return {
@@ -25,7 +27,9 @@ class Installer:
             'silent_args': self.silent_args,
             'wait_for_completion': self.wait_for_completion,
             'timeout': self.timeout,
-            'depends_on': self.depends_on
+            'depends_on': self.depends_on,
+            'optional': self.optional,
+            'enabled': self.enabled
         }
 
 
@@ -100,6 +104,51 @@ class UninstallStrategy:
             'kill_processes': self.kill_processes,
             'remove_paths': self.remove_paths,
             'remove_registry': self.remove_registry
+        }
+
+
+@dataclass
+class FileReplacement:
+    """Defines a file to replace after installation."""
+    source: str  # File in package folder
+    destination: str  # Full path where to copy
+    backup: bool = True
+    description: str = ""
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'source': self.source,
+            'destination': self.destination,
+            'backup': self.backup,
+            'description': self.description
+        }
+
+
+@dataclass
+class FileCopy:
+    """Defines a file to copy after installation."""
+    source: str
+    destination: str
+    description: str = ""
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'source': self.source,
+            'destination': self.destination,
+            'description': self.description
+        }
+
+
+@dataclass
+class PostInstallOperations:
+    """Post-installation operations."""
+    file_replacements: List[FileReplacement] = field(default_factory=list)
+    file_copies: List[FileCopy] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            'file_replacements': [fr.to_dict() for fr in self.file_replacements],
+            'file_copies': [fc.to_dict() for fc in self.file_copies]
         }
 
 
@@ -251,6 +300,9 @@ class ApplicationProfile:
     
     # Uninstall
     uninstall: UninstallStrategy = field(default_factory=UninstallStrategy)
+    
+    # Post-install operations
+    post_install: PostInstallOperations = field(default_factory=PostInstallOperations)
     
     # Shortcuts
     shortcuts: List[Shortcut] = field(default_factory=list)
