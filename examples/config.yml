@@ -1,0 +1,62 @@
+# Example Configuration for Intune App Packager
+# This file demonstrates how to configure batch processing of multiple applications
+
+# Path to the IntuneWinAppUtil.exe tool
+intune_win_tool: "C:\\Tools\\IntuneWinAppUtil.exe"
+
+# Default output directory for all applications (can be overridden per app)
+output_directory: "C:\\IntunePackages"
+
+# Stop processing if any application fails
+stop_on_error: false
+
+# List of applications to package
+applications:
+  # Example 1: Simple EXE with silent installation
+  - name: "Adobe Acrobat Reader DC"
+    source_file: "C:\\Installers\\AdobeReader\\AcroRdrDC.exe"
+    setup_file: "AcroRdrDC.exe"
+    install_command: "AcroRdrDC.exe /sAll /rs /msi EULA_ACCEPT=YES"
+    uninstall_command: "msiexec /x {AC76BA86-7AD7-1033-7B44-AC0F074E4100} /quiet"
+    analyze: true
+
+  # Example 2: NSIS installer
+  - name: "7-Zip 23.01"
+    source_file: "C:\\Installers\\7-Zip\\7z2301-x64.exe"
+    setup_file: "7z2301-x64.exe"
+    install_command: "7z2301-x64.exe /S"
+    uninstall_command: "C:\\Program Files\\7-Zip\\Uninstall.exe /S"
+    output_folder: "C:\\IntunePackages\\7-Zip"
+
+  # Example 3: Application with multiple files in a folder
+  - name: "VLC Media Player"
+    source_folder: "C:\\Installers\\VLC"
+    setup_file: "vlc-installer.exe"
+    install_command: "vlc-installer.exe /S"
+    uninstall_command: "C:\\Program Files\\VideoLAN\\VLC\\uninstall.exe /S"
+    analyze: true
+
+  # Example 4: MSI-based installer wrapped in EXE
+  - name: "Google Chrome Enterprise"
+    source_file: "C:\\Installers\\Chrome\\GoogleChromeStandaloneEnterprise64.msi"
+    setup_file: "GoogleChromeStandaloneEnterprise64.msi"
+    install_command: "msiexec /i GoogleChromeStandaloneEnterprise64.msi /quiet /norestart"
+    uninstall_command: "msiexec /x {PRODUCT-GUID} /quiet /norestart"
+
+  # Example 5: Custom installer with specific output location
+  - name: "Microsoft Teams"
+    source_file: "C:\\Installers\\Teams\\Teams_windows_x64.exe"
+    setup_file: "Teams_windows_x64.exe"
+    install_command: "Teams_windows_x64.exe -s"
+    uninstall_command: "%LocalAppData%\\Microsoft\\Teams\\Update.exe --uninstall -s"
+    output_folder: "C:\\IntunePackages\\Microsoft\\Teams"
+    quiet: true
+
+  # Example 6: Application with catalog file (signed app)
+  - name: "Company Internal App"
+    source_folder: "C:\\Installers\\InternalApp"
+    setup_file: "setup.exe"
+    catalog_folder: "C:\\Installers\\InternalApp\\Catalog"
+    install_command: "setup.exe /install /quiet"
+    uninstall_command: "setup.exe /uninstall /quiet"
+    analyze: false

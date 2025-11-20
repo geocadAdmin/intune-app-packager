@@ -1,0 +1,30 @@
+{
+  "intune_win_tool": "C:\\Tools\\IntuneWinAppUtil.exe",
+  "output_directory": "C:\\IntunePackages",
+  "stop_on_error": false,
+  "applications": [
+    {
+      "name": "Notepad++ 8.5.8",
+      "source_file": "C:\\Installers\\Notepad++\\npp.8.5.8.Installer.x64.exe",
+      "setup_file": "npp.8.5.8.Installer.x64.exe",
+      "install_command": "npp.8.5.8.Installer.x64.exe /S",
+      "uninstall_command": "C:\\Program Files\\Notepad++\\uninstall.exe /S",
+      "analyze": true
+    },
+    {
+      "name": "Mozilla Firefox ESR",
+      "source_file": "C:\\Installers\\Firefox\\Firefox Setup.exe",
+      "setup_file": "Firefox Setup.exe",
+      "install_command": "\"Firefox Setup.exe\" -ms",
+      "uninstall_command": "C:\\Program Files\\Mozilla Firefox\\uninstall\\helper.exe /S",
+      "output_folder": "C:\\IntunePackages\\Firefox"
+    },
+    {
+      "name": "Git for Windows",
+      "source_file": "C:\\Installers\\Git\\Git-2.42.0-64-bit.exe",
+      "setup_file": "Git-2.42.0-64-bit.exe",
+      "install_command": "Git-2.42.0-64-bit.exe /VERYSILENT /NORESTART",
+      "uninstall_command": "C:\\Program Files\\Git\\unins000.exe /VERYSILENT /NORESTART"
+    }
+  ]
+}

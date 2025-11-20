@@ -1,0 +1,7 @@
+pyyaml>=6.0
+click>=8.1.0
+pefile>=2023.2.7
+requests>=2.31.0
+pathlib>=1.0.1
+colorama>=0.4.6
+tqdm>=4.66.0
