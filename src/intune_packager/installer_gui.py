@@ -34,21 +34,57 @@ class InstallerGUI:
     def create_widgets(self):
         """Create GUI widgets."""
         # Header
-        header = tk.Frame(self.root, bg="#0078D4", height=80)
-        header.pack(fill=tk.X)
+        header = tk.Frame(self.root, bg="#0078D4", height=60)
+        header.pack(fill=tk.X, side=tk.TOP)
+        header.pack_propagate(False)
         
         title = tk.Label(
             header,
             text="Intune App Packager",
-            font=("Arial", 24, "bold"),
+            font=("Arial", 20, "bold"),
             bg="#0078D4",
             fg="white"
         )
-        title.pack(pady=20)
+        title.pack(pady=15)
         
-        # Main content
-        content = tk.Frame(self.root, padx=20, pady=20)
+        # Footer
+        footer = tk.Frame(self.root, height=30)
+        footer.pack(fill=tk.X, side=tk.BOTTOM)
+        footer.pack_propagate(False)
+        
+        footer_label = tk.Label(
+            footer,
+            text="Intune App Packager v0.2.0 | Read USER_GUIDE.md for documentation",
+            font=("Arial", 8),
+            fg="gray"
+        )
+        footer_label.pack(pady=5)
+        
+        # Create canvas with scrollbar for main content
+        canvas = tk.Canvas(self.root)
+        scrollbar = tk.Scrollbar(self.root, orient="vertical", command=canvas.yview)
+        scrollable_frame = tk.Frame(canvas)
+        
+        scrollable_frame.bind(
+            "<Configure>",
+            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
+        )
+        
+        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+        canvas.configure(yscrollcommand=scrollbar.set)
+        
+        # Pack canvas and scrollbar
+        canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        
+        # Main content inside scrollable frame
+        content = tk.Frame(scrollable_frame, padx=20, pady=20)
         content.pack(fill=tk.BOTH, expand=True)
+        
+        # Enable mousewheel scrolling
+        def _on_mousewheel(event):
+            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
+        canvas.bind_all("<MouseWheel>", _on_mousewheel)
         
         # Instructions
         instructions = tk.Label(
@@ -86,10 +122,10 @@ class InstallerGUI:
         
         # Progress/Log area
         log_frame = tk.LabelFrame(content, text="Status", padx=10, pady=10)
-        log_frame.pack(fill=tk.BOTH, expand=True, pady=10)
+        log_frame.pack(fill=tk.X, pady=10)
         
-        self.log_text = scrolledtext.ScrolledText(log_frame, height=10, state=tk.DISABLED)
-        self.log_text.pack(fill=tk.BOTH, expand=True)
+        self.log_text = scrolledtext.ScrolledText(log_frame, height=8, state=tk.DISABLED)
+        self.log_text.pack(fill=tk.X)
         
         # Buttons
         button_frame = tk.Frame(content)
@@ -122,15 +158,6 @@ class InstallerGUI:
             padx=20,
             pady=10
         ).pack(side=tk.RIGHT, padx=5)
-        
-        # Footer
-        footer = tk.Label(
-            self.root,
-            text="Intune App Packager v0.2.0 | Read USER_GUIDE.md for documentation",
-            font=("Arial", 8),
-            fg="gray"
-        )
-        footer.pack(side=tk.BOTTOM, pady=5)
     
     def log(self, message):
         """Add message to log."""
