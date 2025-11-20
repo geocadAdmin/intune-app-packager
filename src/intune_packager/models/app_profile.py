@@ -318,7 +318,24 @@ class ApplicationProfile:
         
         # Parse uninstall strategy
         uninstall_data = data.get('uninstall', {})
-        uninstall = UninstallStrategy(**uninstall_data) if uninstall_data else UninstallStrategy()
+        if uninstall_data:
+            # Flatten nested structure from YAML
+            strategy = uninstall_data.get('strategy', 'multi')
+            standard_data = uninstall_data.get('standard', {})
+            force_data = uninstall_data.get('force', {})
+            
+            uninstall = UninstallStrategy(
+                strategy=strategy,
+                method=standard_data.get('method', 'registry'),
+                command=standard_data.get('command'),
+                wait=standard_data.get('wait', True),
+                force_enabled=force_data.get('enabled', True),
+                kill_processes=force_data.get('kill_processes', []),
+                remove_paths=force_data.get('remove_paths', []),
+                remove_registry=force_data.get('remove_registry', [])
+            )
+        else:
+            uninstall = UninstallStrategy()
         
         # Parse shortcuts
         shortcuts_data = data.get('shortcuts', {})
@@ -326,14 +343,33 @@ class ApplicationProfile:
             Shortcut(**sc) for sc in shortcuts_data.get('locations', [])
         ]
         
-        # Parse assignments
-        assignments = [
-            Assignment(**assign) for assign in data.get('assignments', [])
-        ]
-        
         # Parse Intune settings
         intune_data = data.get('intune', {})
-        intune = IntuneSettings(**intune_data) if intune_data else IntuneSettings()
+        if intune_data:
+            # Parse nested requirements
+            req_data = intune_data.get('requirements', {})
+            requirements = IntuneRequirements(**req_data) if req_data else IntuneRequirements()
+            
+            # Parse assignments from intune.assignments
+            intune_assignments = intune_data.get('assignments', [])
+            
+            intune = IntuneSettings(
+                install_command=intune_data.get('install_command', 'powershell.exe -ExecutionPolicy Bypass -File install.ps1'),
+                uninstall_command=intune_data.get('uninstall_command', 'powershell.exe -ExecutionPolicy Bypass -File uninstall.ps1'),
+                install_time_minutes=intune_data.get('install_time_minutes', 15),
+                allow_available_uninstall=intune_data.get('allow_available_uninstall', True),
+                requirements=requirements
+            )
+        else:
+            intune_assignments = []
+            intune = IntuneSettings()
+        
+        # Parse assignments (combine root level and intune level)
+        root_assignments = data.get('assignments', [])
+        all_assignments = root_assignments + intune_assignments
+        assignments = [
+            Assignment(**assign) for assign in all_assignments
+        ]
         
         # Parse Company Portal metadata
         cp_data = data.get('company_portal', {})
