@@ -1,20 +1,44 @@
 # Intune App Packager
 
-Automated solution for converting Windows EXE applications to .intunewin format for Microsoft Intune deployment.
+**Complete Intune application packaging and deployment solution with zero manual Intune portal work required.**
 
-## Overview
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 
-Intune App Packager is a comprehensive tool designed to automate and simplify the process of packaging Windows applications for deployment through Microsoft Intune. It handles the complex conversion of EXE installers to the .intunewin format required by Intune's Win32 app management.
+## 🎯 Overview
 
-## Features
+Intune App Packager automates the entire lifecycle of Windows application deployment to Microsoft Intune:
+- 📦 **Package** - Convert EXE installers to .intunewin with auto-generated PowerShell scripts
+- 🚀 **Deploy** - Upload and assign to Azure AD groups via Microsoft Graph API  
+- 👥 **Assign** - Select groups visually, configure Company Portal, set dependencies
+- 📊 **Monitor** - Real-time deployment status and device-level tracking
+- ✅ **Test** - Windows Sandbox testing before production deployment
 
-- **Automated Conversion**: Convert EXE files to .intunewin format with a single command
-- **Application Analysis**: Automatically detect application metadata, dependencies, and installation requirements
-- **Batch Processing**: Process multiple applications using configuration files
-- **Configuration Management**: Support for YAML/JSON configuration profiles
-- **Dependency Detection**: Identify and report application dependencies
-- **Metadata Extraction**: Extract version information, publisher details, and other metadata from EXE files
-- **CLI Interface**: Easy-to-use command-line interface for manual and automated workflows
+**Key Innovation**: Handles complex multi-installer scenarios (e.g., Firebird + EWMapa) where multiple EXEs must be installed in sequence.
+
+## ✨ Key Features
+
+### Packaging & Scripts
+- 🛠️ **Multi-Installer Support** - Sequential installation with dependency management (Firebird → EWMapa)
+- 📜 **Smart PowerShell Generation** - Auto-generated install/uninstall/detection scripts with comprehensive logging
+- 🔍 **Enhanced Detection** - Multi-layer detection: file + registry + version + custom PowerShell
+- ♻️ **Multi-Strategy Uninstall** - Attempts standard uninstall, falls back to force removal
+- 🔗 **Shortcut Management** - Auto-creates desktop/start menu shortcuts if missing
+
+### Intune Integration (Zero Portal Work)
+- 🔐 **Complete API Integration** - Microsoft Graph API for all Intune operations
+- 👥 **Group Assignment** - Visual Azure AD group selector
+- 🏪 **Company Portal** - Full control over app display (description, icon, screenshots)
+- 🔗 **Dependencies** - Set which apps must be installed first
+- 🔄 **Supersedence** - Automatically replace old versions
+- 📊 **Real-time Monitoring** - Track deployment status per device/user
+
+### Development Experience  
+- 🖥️ **Dual Interface** - Both GUI (Electron + React) and CLI
+- 📦 **YAML Configuration** - Version-controlled application profiles
+- 🧪 **Windows Sandbox Testing** - Validate packages before production
+- 📑 **Template System** - Customizable PowerShell script templates
+- 🤖 **CI/CD Ready** - Service principal authentication for automation
 
 ## Prerequisites
 
@@ -38,30 +62,65 @@ pip install -e .
 pip install intune-app-packager
 ```
 
-## Quick Start
+## 🚀 Quick Start
 
-### Basic Usage
-
-Convert a single EXE to .intunewin format:
+### Installation
 
 ```bash
-intune-packager convert --input /path/to/app.exe --output /path/to/output
+git clone https://github.com/yourusername/intune-app-packager.git
+cd intune-app-packager
+pip install -e .
 ```
 
-### Using Configuration File
-
-Process multiple applications using a configuration file:
+### Authenticate with Azure AD
 
 ```bash
-intune-packager batch --config applications.yml
+intune-packager auth login --interactive
 ```
 
-### Analyze Application
-
-Analyze an EXE file to extract metadata and dependencies:
+### Create Your First Package
 
 ```bash
-intune-packager analyze --input /path/to/app.exe
+# Create application config
+intune-packager init-app --name "EWMapa" --wizard
+
+# Generate PowerShell scripts
+intune-packager generate-scripts --config ewmapa.yml --preview
+
+# Test in Windows Sandbox
+intune-packager test-sandbox --config ewmapa.yml
+
+# Deploy to Intune and assign to groups
+intune-packager deploy \
+  --config ewmapa.yml \
+  --groups "IT-Department,GIS-Team" \
+  --mode available \
+  --monitor
+```
+
+### Example: Multi-Installer (Firebird + EWMapa)
+
+See complete example in `examples/ewmapa_config.yml`:
+
+```yaml
+application:
+  name: "EWMapa"
+  version: "2.1.0"
+  
+installers:
+  - name: "Firebird Database"
+    file: "Firebird-3.0.10-Setup.exe"
+    silent_args: "/VERYSILENT /NORESTART"
+    
+  - name: "EWMapa Application"
+    file: "EWMapa-2.1.0-Setup.exe"
+    silent_args: "/S"
+    depends_on: ["Firebird Database"]
+
+intune:
+  assignments:
+    - intent: "available"
+      target_groups: ["IT-Department", "GIS-Team"]
 ```
 
 ## Configuration

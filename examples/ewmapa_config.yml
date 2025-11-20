@@ -1,0 +1,181 @@
+application:
+  name: "EWMapa"
+  version: "2.1.0"
+  publisher: "YourCompany"
+  description: |
+    EWMapa is an enterprise mapping and geospatial analysis tool.
+    
+    Features:
+    - Advanced mapping capabilities
+    - Real-time data visualization
+    - Enterprise database integration with Firebird
+    
+    This package includes both Firebird database (required dependency) and the EWMapa application.
+
+installers:
+  - name: "Firebird Database"
+    file: "installers/Firebird-3.0.10-Setup.exe"
+    silent_args: "/VERYSILENT /SUPPRESSMSGBOXES /NORESTART /SP- /COMPONENTS=\"ServerComponent,ClientComponent\""
+    wait_for_completion: true
+    timeout: 600
+    depends_on: []
+    
+  - name: "EWMapa Application"
+    file: "installers/EWMapa-2.1.0-Setup.exe"
+    silent_args: "/S"
+    wait_for_completion: true
+    timeout: 300
+    depends_on: ["Firebird Database"]
+
+detection:
+  method: "comprehensive"
+  rules:
+    # Check main EWMapa executable
+    - type: "file"
+      path: "C:\\Program Files\\EWMapa\\EWMapa.exe"
+      check_version: true
+      min_version: "2.1.0"
+      
+    # Check EWMapa registry key
+    - type: "registry"
+      hive: "HKLM"
+      path: "SOFTWARE\\EWMapa"
+      value: "Version"
+      operator: "GreaterOrEqual"
+      expected: "2.1.0"
+      
+    # Check Firebird is installed
+    - type: "registry"
+      hive: "HKLM"
+      path: "SOFTWARE\\Firebird\\Firebird Server\\Instances"
+      value: "DefaultInstance"
+      operator: "Exists"
+      
+    # Check Firebird server executable
+    - type: "file"
+      path: "C:\\Program Files\\Firebird\\Firebird_3_0\\fbserver.exe"
+      check_version: false
+  
+  # Optional: Custom detection logic
+  custom_script: |
+    # Additional check: Verify Firebird service is installed
+    $fbService = Get-Service -Name "FirebirdServerDefaultInstance" -ErrorAction SilentlyContinue
+    if (!$fbService) {
+        return $false
+    }
+    
+    # Verify EWMapa can connect to Firebird
+    $connectionTest = Test-Path "C:\\ProgramData\\EWMapa\\database.fdb"
+    return $connectionTest
+
+uninstall:
+  strategy: "multi"
+  standard:
+    method: "registry"
+    wait: true
+  force:
+    enabled: true
+    kill_processes:
+      - "EWMapa.exe"
+      - "fbserver.exe"
+      - "fb_inet_server.exe"
+    remove_paths:
+      - "C:\\Program Files\\EWMapa"
+      - "C:\\Program Files\\Firebird\\Firebird_3_0"
+      - "C:\\ProgramData\\EWMapa"
+    remove_registry:
+      - "HKLM:\\SOFTWARE\\EWMapa"
+      - "HKLM:\\SOFTWARE\\Firebird"
+      - "HKLM:\\SYSTEM\\CurrentControlSet\\Services\\FirebirdServerDefaultInstance"
+
+shortcuts:
+  auto_create: true
+  locations:
+    - name: "EWMapa"
+      target: "C:\\Program Files\\EWMapa\\EWMapa.exe"
+      locations: ["Desktop", "StartMenu"]
+      icon: "C:\\Program Files\\EWMapa\\EWMapa.exe,0"
+      description: "Enterprise Mapping Application"
+
+company_portal:
+  description: |
+    **EWMapa - Enterprise Geospatial Analysis**
+    
+    EWMapa provides powerful mapping and spatial data analysis capabilities for enterprise users.
+    
+    **Key Features:**
+    - Interactive mapping with multiple layer support
+    - Real-time data visualization
+    - Advanced spatial queries
+    - Integration with Firebird database backend
+    - Export to multiple formats (PDF, PNG, KML)
+    
+    **System Requirements:**
+    - Windows 10 or later
+    - 4GB RAM minimum
+    - 500MB disk space
+    
+    **Support:**
+    For help and documentation, visit the information URL below or contact IT support.
+  
+  icon: "assets/ewmapa-icon.png"
+  screenshots:
+    - "assets/screenshot-main.png"
+    - "assets/screenshot-analysis.png"
+    - "assets/screenshot-export.png"
+  
+  information_url: "https://yourcompany.com/ewmapa"
+  privacy_url: "https://yourcompany.com/privacy"
+  featured: true
+  category: "Productivity"
+
+intune:
+  install_command: "powershell.exe -ExecutionPolicy Bypass -File install.ps1"
+  uninstall_command: "powershell.exe -ExecutionPolicy Bypass -File uninstall.ps1"
+  install_time_minutes: 20
+  allow_available_uninstall: true
+  
+  requirements:
+    minimum_os: "1809"  # Windows 10 1809 (October 2018 Update)
+    architecture: "x64"
+    minimum_disk_space_mb: 500
+    minimum_memory_mb: 4096
+  
+  assignments:
+    # Make available in Company Portal for IT Department
+    - intent: "available"
+      target_groups:
+        - "IT-Department"
+        - "GIS-Team"
+        - "Engineering"
+      notification: true
+      available_in_company_portal: true
+      
+    # Required installation for specific teams
+    - intent: "required"
+      target_groups:
+        - "Mapping-Specialists"
+      notification: true
+      deadline: "2025-12-31T23:59:59Z"
+      restart_grace_period_minutes: 1440  # 24 hours
+      
+  dependencies:
+    # Note: These are Intune app dependencies (if other apps need to be installed first)
+    # For example, if .NET Framework is needed:
+    # - name: ".NET Framework 4.8"
+    #   type: "dependency"
+      
+  supersedence:
+    # Replace older versions
+    - app_name: "EWMapa 2.0.0"
+      uninstall_previous: true
+    - app_name: "EWMapa 1.5.0"
+      uninstall_previous: true
+
+testing:
+  sandbox_enabled: true
+  verify_install: true
+  verify_detection: true
+  verify_shortcuts: true
+  verify_uninstall: true
+  verify_detection_after_uninstall: true
